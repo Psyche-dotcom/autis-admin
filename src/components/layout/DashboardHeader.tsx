@@ -20,17 +20,21 @@ interface DashboardHeaderProps {
   onMenuToggle: () => void;
   isMobileMenuOpen: boolean;
 }
-
+type User = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  // Add other properties as needed
+};
 export function DashboardHeader({
   onMenuToggle,
   isMobileMenuOpen,
 }: DashboardHeaderProps) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const fetchUser = async () => {
     const response = await HttpService.getData(routes.profile());
-    //@ts-ignore
-    console.log("usert", response);
+    //@ts-expect-error - we are sure that the response will have a user object
     setUser(response);
   };
   useEffect(() => {
@@ -78,7 +82,7 @@ export function DashboardHeader({
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
                 <AvatarFallback>
-                  {user?.firstName?.charAt(0).toUpperCase() +
+                  {(user?.firstName?.charAt(0)?.toUpperCase() || "") +
                     user?.lastName?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>

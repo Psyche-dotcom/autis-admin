@@ -40,9 +40,20 @@ import { routes } from "@/service/api-routes";
 import { Admin } from "@/interface";
 import { mapApiToAdmin } from "@/lib/utils";
 
+type AdminKey =
+  | "email"
+  | "firstName"
+  | "lastName"
+  | "country"
+  | "age"
+  | "gender"
+  | "phoneNumber"
+  | "password"
+  | "userName";
+
 export function AdminManagement() {
   const [admins, setAdmins] = useState<Admin[]>([]);
-  const [newAdmin, setNewAdmin] = useState({
+  const [newAdmin, setNewAdmin] = useState<Record<AdminKey, string>>({
     email: "",
     firstName: "",
     lastName: "",
@@ -88,7 +99,7 @@ export function AdminManagement() {
     }
 
     try {
-      const response = await HttpService.postData(
+      await HttpService.postData(
         {
           email,
           userName,
@@ -121,7 +132,7 @@ export function AdminManagement() {
         title: "Admin Created",
         description: "The new admin has been successfully created.",
       });
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Error",
@@ -135,10 +146,10 @@ export function AdminManagement() {
       const response = await HttpService.getData(
         routes.retrieveAllAdmin(50, 1)
       );
-      //@ts-ignore
+      // @ts-expect-error: API response is loosely typed
       const converted = response?.user?.map(mapApiToAdmin) || [];
       setAdmins(converted);
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Fetch Error",
@@ -155,7 +166,7 @@ export function AdminManagement() {
         title: "Admin Deleted",
         description: "The admin has been removed successfully.",
       });
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Error",
@@ -205,7 +216,7 @@ export function AdminManagement() {
                   <Input
                     id={key}
                     type={type}
-                    value={(newAdmin as any)[key]}
+                    value={newAdmin[key as AdminKey]}
                     onChange={(e) =>
                       setNewAdmin({ ...newAdmin, [key]: e.target.value })
                     }

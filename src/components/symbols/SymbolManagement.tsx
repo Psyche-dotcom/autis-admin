@@ -20,44 +20,6 @@ import { routes } from "@/service/api-routes";
 import { Category, ISymbol } from "@/interface";
 import { mapApiToCatCount, mapApiToCatSymbol } from "@/lib/utils";
 
-// Mock data
-const mockCategories: Category[] = [
-  { id: "1", name: "Arrows", symbolCount: 2 },
-  { id: "2", name: "Weather", symbolCount: 1 },
-  { id: "3", name: "UI Elements", symbolCount: 1 },
-];
-
-const mockSymbols: ISymbol[] = [
-  {
-    id: "1",
-    name: "Right Arrow",
-    svg: `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>`,
-    categoryId: "1",
-    dateCreated: "2023-05-10",
-  },
-  {
-    id: "2",
-    name: "Left Arrow",
-    svg: `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>`,
-    categoryId: "1",
-    dateCreated: "2023-05-11",
-  },
-  {
-    id: "3",
-    name: "Sun",
-    svg: `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`,
-    categoryId: "2",
-    dateCreated: "2023-06-05",
-  },
-  {
-    id: "4",
-    name: "Menu",
-    svg: `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`,
-    categoryId: "3",
-    dateCreated: "2023-06-20",
-  },
-];
-
 export function SymbolManagement() {
   const [symbols, setSymbols] = useState<ISymbol[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

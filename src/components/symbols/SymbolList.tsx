@@ -39,7 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pencil, Plus, Trash2, Upload } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Category, ISymbol } from "@/interface";
 
 interface SymbolListProps {

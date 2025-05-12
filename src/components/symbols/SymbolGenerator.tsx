@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Symbol, Category } from "./SymbolManagement";
+
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -13,13 +12,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { Category, ISymbol } from "@/interface";
 
 interface SymbolGeneratorProps {
   categories: Category[];
-  onGenerateSymbol: (symbol: Symbol) => void;
+  onGenerateSymbol: (symbol: ISymbol) => void;
 }
 
-export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGeneratorProps) {
+export function SymbolGenerator({
+  categories,
+  onGenerateSymbol,
+}: SymbolGeneratorProps) {
   const [prompt, setPrompt] = useState("");
   const [categoryId, setCategoryId] = useState(categories[0]?.id || "");
   const [symbolName, setSymbolName] = useState("");
@@ -28,22 +31,41 @@ export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGenerato
 
   // This would normally call an AI service
   // For demo purposes, we'll simulate generation with predefined SVGs
-  const mockGenerateSVG = async (promptText: string, category: string): Promise<string> => {
+  const mockGenerateSVG = async (
+    promptText: string,
+    category: string
+  ): Promise<string> => {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
     // Simple keyword matching for demo purposes
     const promptLower = promptText.toLowerCase();
-    const categoryObj = categories.find(c => c.id === category);
+    const categoryObj = categories.find((c) => c.id === category);
     const categoryName = categoryObj?.name.toLowerCase() || "";
-    
-    if (promptLower.includes("arrow") || promptLower.includes("direction") || categoryName.includes("arrow")) {
+
+    if (
+      promptLower.includes("arrow") ||
+      promptLower.includes("direction") ||
+      categoryName.includes("arrow")
+    ) {
       return `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>`;
-    } else if (promptLower.includes("moon") || promptLower.includes("night") || categoryName.includes("weather")) {
+    } else if (
+      promptLower.includes("moon") ||
+      promptLower.includes("night") ||
+      categoryName.includes("weather")
+    ) {
       return `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
-    } else if (promptLower.includes("sun") || promptLower.includes("day") || categoryName.includes("weather")) {
+    } else if (
+      promptLower.includes("sun") ||
+      promptLower.includes("day") ||
+      categoryName.includes("weather")
+    ) {
       return `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
-    } else if (promptLower.includes("menu") || promptLower.includes("hamburger") || categoryName.includes("ui")) {
+    } else if (
+      promptLower.includes("menu") ||
+      promptLower.includes("hamburger") ||
+      categoryName.includes("ui")
+    ) {
       return `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`;
     } else {
       // Default shape
@@ -60,7 +82,7 @@ export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGenerato
       });
       return;
     }
-    
+
     if (!categoryId) {
       toast({
         variant: "destructive",
@@ -71,24 +93,25 @@ export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGenerato
     }
 
     setIsGenerating(true);
-    
+
     try {
       // In a real app, this would call an AI service API with both prompt and category
       const svg = await mockGenerateSVG(prompt, categoryId);
       setGeneratedSVG(svg);
-      
+
       // Auto-generate a name if not provided
       if (!symbolName) {
         const words = prompt.split(" ");
         const capitalizedWords = words.map(
-          word => word.charAt(0).toUpperCase() + word.slice(1)
+          (word) => word.charAt(0).toUpperCase() + word.slice(1)
         );
         setSymbolName(capitalizedWords.join(" "));
       }
-      
+
       toast({
         title: "Symbol Generated",
-        description: "Your symbol has been created. Click Save to add it to your library.",
+        description:
+          "Your symbol has been created. Click Save to add it to your library.",
       });
     } catch (error) {
       toast({
@@ -111,7 +134,7 @@ export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGenerato
       return;
     }
 
-    const newSymbol: Symbol = {
+    const newSymbol: ISymbol = {
       id: Math.random().toString(36).substring(7),
       name: symbolName,
       svg: generatedSVG,
@@ -120,12 +143,12 @@ export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGenerato
     };
 
     onGenerateSymbol(newSymbol);
-    
+
     toast({
       title: "Symbol Saved",
       description: `${symbolName} has been added to your library`,
     });
-    
+
     // Reset form
     setPrompt("");
     setSymbolName("");
@@ -136,7 +159,9 @@ export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGenerato
     <div className="space-y-6">
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="prompt">Describe the symbol you want to generate</Label>
+          <Label htmlFor="prompt">
+            Describe the symbol you want to generate
+          </Label>
           <Textarea
             id="prompt"
             placeholder="E.g., A right-facing arrow with a curved shaft"
@@ -145,7 +170,7 @@ export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGenerato
             className="h-24"
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="symbol-category">Category</Label>
           <Select value={categoryId} onValueChange={setCategoryId}>
@@ -161,9 +186,9 @@ export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGenerato
             </SelectContent>
           </Select>
         </div>
-        
-        <Button 
-          onClick={handleGenerate} 
+
+        <Button
+          onClick={handleGenerate}
           disabled={isGenerating || !prompt || !categoryId}
         >
           {isGenerating ? "Generating..." : "Generate Symbol"}
@@ -175,10 +200,13 @@ export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGenerato
           <div className="text-center">
             <h3 className="text-lg font-medium">Generated Symbol</h3>
             <div className="mt-4 p-4 flex justify-center items-center">
-              <div className="w-24 h-24 bg-muted rounded flex items-center justify-center" dangerouslySetInnerHTML={{ __html: generatedSVG }} />
+              <div
+                className="w-24 h-24 bg-muted rounded flex items-center justify-center"
+                dangerouslySetInnerHTML={{ __html: generatedSVG }}
+              />
             </div>
           </div>
-          
+
           <div className="grid gap-4">
             <div className="space-y-2">
               <Label htmlFor="symbol-name">Symbol Name</Label>
@@ -189,7 +217,7 @@ export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGenerato
                 placeholder="Enter a name for this symbol"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="svg-code">SVG Code</Label>
               <Textarea
@@ -199,7 +227,7 @@ export function SymbolGenerator({ categories, onGenerateSymbol }: SymbolGenerato
                 className="font-mono text-xs h-24"
               />
             </div>
-            
+
             <Button onClick={handleSave} className="mt-2">
               Save to Library
             </Button>

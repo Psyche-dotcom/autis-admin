@@ -33,7 +33,7 @@ export function LoginForm() {
       },
       routes.login()
     );
-    //@ts-ignore
+    //@ts-expect-error - we are sure that the response will have a jwt
     Cookies.set("token", response?.jwt);
 
     toast({

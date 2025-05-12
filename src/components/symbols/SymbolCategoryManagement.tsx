@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Category } from "./SymbolManagement";
+
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -33,6 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Category } from "@/interface";
 
 interface SymbolCategoryManagementProps {
   categories: Category[];
@@ -109,7 +109,10 @@ export function SymbolCategoryManagement({
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsAddDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleAddCategory}>Add Category</Button>
@@ -130,7 +133,10 @@ export function SymbolCategoryManagement({
           <TableBody>
             {categories.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={3}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   No categories found
                 </TableCell>
               </TableRow>
@@ -140,14 +146,18 @@ export function SymbolCategoryManagement({
                   <TableCell>{category.name}</TableCell>
                   <TableCell>{category.symbolCount}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(category)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(category)}
+                    >
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="text-destructive"
                           disabled={category.symbolCount > 0}
                         >
@@ -158,14 +168,14 @@ export function SymbolCategoryManagement({
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete Category</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to delete the {category.name} category?
-                            This action cannot be undone.
+                            Are you sure you want to delete the {category.name}{" "}
+                            category? This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={() => onDelete(category.id)} 
+                          <AlertDialogAction
+                            onClick={() => onDelete(category.id)}
                             className="bg-destructive text-destructive-foreground"
                           >
                             Delete
@@ -187,9 +197,7 @@ export function SymbolCategoryManagement({
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Edit Category</DialogTitle>
-              <DialogDescription>
-                Update the category name
-              </DialogDescription>
+              <DialogDescription>Update the category name</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
@@ -199,13 +207,21 @@ export function SymbolCategoryManagement({
                 <Input
                   id="edit-category-name"
                   value={currentCategory.name}
-                  onChange={(e) => setCurrentCategory({ ...currentCategory, name: e.target.value })}
+                  onChange={(e) =>
+                    setCurrentCategory({
+                      ...currentCategory,
+                      name: e.target.value,
+                    })
+                  }
                   className="col-span-3"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleUpdateCategory}>Save Changes</Button>
