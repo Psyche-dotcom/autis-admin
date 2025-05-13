@@ -263,9 +263,18 @@ export function SymbolList({
               {previewSrc && (
                 <div className="grid grid-cols-4 items-center gap-4">
                   <span className="text-right">Preview</span>
-                  <div className="col-span-3 border rounded p-4 flex justify-center items-center h-24">
+                  <div className="col-span-3 border rounded p-4 flex justify-center items-center h-24 overflow-hidden">
                     {selectedFile?.type === "image/svg+xml" ? (
-                      <div dangerouslySetInnerHTML={{ __html: previewSrc }} />
+                      <div
+                        dangerouslySetInnerHTML={{ __html: previewSrc }}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      />
                     ) : (
                       <img
                         src={previewSrc}
@@ -336,13 +345,13 @@ export function SymbolList({
                   </TableCell>
                   <TableCell>{symbol.dateCreated}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button
+                    {/* <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(symbol)}
                     >
                       <Pencil className="h-4 w-4" />
-                    </Button>
+                    </Button> */}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button

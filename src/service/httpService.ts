@@ -137,12 +137,9 @@ class HttpService {
     });
   }
 
-  async uploadProfile(payload: { file: File }, url: string) {
-    console.log("File enter here", payload);
+  async uploadProfile(payload: string, url: string) {
     const formData = new FormData();
-
-    formData.append("file", payload.file);
-    console.log("FormData", formData);
+    formData.append("file", payload);
     return this.request.post(this.getServiceUrl(url), formData, {
       headers: {
         "Content-Type": "multipart/form-data",

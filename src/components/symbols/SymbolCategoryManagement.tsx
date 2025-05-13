@@ -146,13 +146,13 @@ export function SymbolCategoryManagement({
                   <TableCell>{category.name}</TableCell>
                   <TableCell>{category.symbolCount}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button
+                    {/* <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(category)}
                     >
                       <Pencil className="h-4 w-4" />
-                    </Button>
+                    </Button> */}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button

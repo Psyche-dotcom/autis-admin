@@ -48,12 +48,13 @@ export function SymbolManagement() {
     setSymbols(converted);
   };
   const handleAddSymbol = async (symbol: ISymbol) => {
-    console.log("new symbol", symbol);
     const response = await HttpService.uploadProfile(
       //@ts-ignore
       symbol.file,
       routes.UploadsymbolUrl(symbol.categoryId, symbol.name)
     );
+
+    await fetchCat();
     await fetchCatSymbol("");
     toast({
       title: "Symbol Created",
@@ -74,37 +75,25 @@ export function SymbolManagement() {
     });
   };
 
-  const handleDeleteSymbol = (id: string) => {
-    const symbolToDelete = symbols.find((s) => s.id === id);
-    if (!symbolToDelete) return;
-
-    setSymbols(symbols.filter((symbol) => symbol.id !== id));
-
-    // Update category count
-    const updatedCategories = [...categories];
-    const categoryIndex = updatedCategories.findIndex(
-      (c) => c.id === symbolToDelete.categoryId
-    );
-    if (categoryIndex >= 0) {
-      updatedCategories[categoryIndex] = {
-        ...updatedCategories[categoryIndex],
-        symbolCount: Math.max(
-          0,
-          updatedCategories[categoryIndex].symbolCount - 1
-        ),
-      };
-      setCategories(updatedCategories);
-    }
-
+  const handleDeleteSymbol = async (id: string) => {
+    const response = await HttpService.deleteData(routes.DeletesymbolUrl(id));
+    await fetchCat();
+    await fetchCatSymbol("");
     toast({
       title: "Symbol Deleted",
       description: "The symbol has been removed from the library",
     });
   };
 
-  const handleAddCategory = (category: Category) => {
-    setCategories([...categories, category]);
-
+  const handleAddCategory = async (category: Category) => {
+    const response = await HttpService.postData(
+      {
+        categoryName: category.name,
+        categoryType: "Admin",
+      },
+      routes.AddCatUrl()
+    );
+    fetchCat();
     toast({
       title: "Category Created",
       description: `${category.name} category has been created`,
@@ -124,19 +113,11 @@ export function SymbolManagement() {
     });
   };
 
-  const handleDeleteCategory = (id: string) => {
-    // Check if category has symbols
-    const categorySymbols = symbols.filter((s) => s.categoryId === id);
-    if (categorySymbols.length > 0) {
-      toast({
-        variant: "destructive",
-        title: "Cannot Delete Category",
-        description: "Remove all symbols from this category first",
-      });
-      return;
-    }
-
-    setCategories(categories.filter((category) => category.id !== id));
+  const handleDeleteCategory: (id: string) => Promise<void> = async (
+    id: string
+  ) => {
+    const response = await HttpService.deleteData(routes.DeleteCatUrl(id));
+    await fetchCat();
 
     toast({
       title: "Category Deleted",
