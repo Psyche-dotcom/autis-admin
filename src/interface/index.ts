@@ -25,3 +25,9 @@ export interface ISymbol {
   dateCreated: string;
   file?: File;
 }
+export type User = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+};

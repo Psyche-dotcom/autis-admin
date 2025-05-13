@@ -1,6 +1,7 @@
 export const routes = {
   login: () => "/api/user/login",
   signup: () => "/api/user/register",
+  reset: () => "/api/user/reset_password",
   Adminsignup: () => "/api/admin/register",
   forgotPassword: (email) => `/api/user/forgot_password?email=${email}`,
   deleteAccount: (email) => `/api/user/delete_user/${email}`,

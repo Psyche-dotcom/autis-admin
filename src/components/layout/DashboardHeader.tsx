@@ -16,16 +16,12 @@ import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import HttpService from "@/service/httpService";
 import { routes } from "@/service/api-routes";
+import { User } from "@/interface";
 interface DashboardHeaderProps {
   onMenuToggle: () => void;
   isMobileMenuOpen: boolean;
 }
-type User = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  // Add other properties as needed
-};
+
 export function DashboardHeader({
   onMenuToggle,
   isMobileMenuOpen,

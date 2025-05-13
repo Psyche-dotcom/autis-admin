@@ -61,7 +61,7 @@ export default function DashboardHomePage() {
               1 high priority
             </p>
             <Button variant="link" className="px-0 mt-2" asChild>
-              <Link href="/dashboard/enquiries">View Enquiries</Link>
+              <Link href="/dashboard/enquiry">View Enquiries</Link>
             </Button>
           </CardContent>
         </Card>
@@ -116,17 +116,10 @@ export default function DashboardHomePage() {
               className="h-20 flex flex-col items-center justify-center"
               asChild
             >
-              <Link href="/dashboard/enquiries">
+              <Link href="/dashboard/enquiry">
                 <Inbox className="h-6 w-6 mb-2" />
                 Check Enquiries
               </Link>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-20 flex flex-col items-center justify-center"
-            >
-              <Database className="h-6 w-6 mb-2" />
-              Export Symbol Library
             </Button>
           </CardContent>
         </Card>
