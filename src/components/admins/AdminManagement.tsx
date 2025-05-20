@@ -64,7 +64,9 @@ export function AdminManagement() {
     password: "",
     userName: "",
   });
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [step, setStep] = useState(1);
 
   const handleCreateAdmin = async () => {
     const {
@@ -126,6 +128,7 @@ export function AdminManagement() {
         password: "",
         userName: "",
       });
+      setStep(1);
       fetchAdmins();
 
       toast({
@@ -146,7 +149,7 @@ export function AdminManagement() {
       const response = await HttpService.getData(
         routes.retrieveAllAdmin(50, 1)
       );
-      // @ts-expect-error: API response is loosely typed
+      // @ts-expect-error
       const converted = response?.user?.map(mapApiToAdmin) || [];
       setAdmins(converted);
     } catch {
@@ -190,46 +193,75 @@ export function AdminManagement() {
               Add New Admin
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-xl">
             <DialogHeader>
               <DialogTitle>Create New Admin</DialogTitle>
               <DialogDescription>
-                Fill out the form to create a new admin account.
+                Step {step} of 2: Fill out the form to create a new admin.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {[
-                { label: "First Name", key: "firstName" },
-                { label: "Last Name", key: "lastName" },
-                { label: "Email", key: "email", type: "email" },
-                { label: "Username", key: "userName" },
-                { label: "Country", key: "country" },
-                { label: "Age", key: "age", type: "number" },
-                { label: "Gender", key: "gender" },
-                { label: "Phone", key: "phoneNumber" },
-                { label: "Password", key: "password", type: "password" },
-              ].map(({ label, key, type = "text" }) => (
-                <div key={key} className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor={key} className="text-right">
-                    {label}
-                  </Label>
-                  <Input
-                    id={key}
-                    type={type}
-                    value={newAdmin[key as AdminKey]}
-                    onChange={(e) =>
-                      setNewAdmin({ ...newAdmin, [key]: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-              ))}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+              {step === 1 && (
+                <>
+                  {[
+                    { label: "First Name", key: "firstName" },
+                    { label: "Last Name", key: "lastName" },
+                    { label: "Email", key: "email", type: "email" },
+                    { label: "Username", key: "userName" },
+                  ].map(({ label, key, type = "text" }) => (
+                    <div key={key}>
+                      <Label htmlFor={key}>{label}</Label>
+                      <Input
+                        id={key}
+                        type={type}
+                        value={newAdmin[key as AdminKey]}
+                        onChange={(e) =>
+                          setNewAdmin({ ...newAdmin, [key]: e.target.value })
+                        }
+                      />
+                    </div>
+                  ))}
+                </>
+              )}
+              {step === 2 && (
+                <>
+                  {[
+                    { label: "Country", key: "country" },
+                    { label: "Age", key: "age", type: "number" },
+                    { label: "Gender", key: "gender" },
+                    { label: "Phone", key: "phoneNumber" },
+                    { label: "Password", key: "password", type: "password" },
+                  ].map(({ label, key, type = "text" }) => (
+                    <div key={key}>
+                      <Label htmlFor={key}>{label}</Label>
+                      <Input
+                        id={key}
+                        type={type}
+                        value={newAdmin[key as AdminKey]}
+                        onChange={(e) =>
+                          setNewAdmin({ ...newAdmin, [key]: e.target.value })
+                        }
+                      />
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateAdmin}>Create Admin</Button>
+
+            <DialogFooter className="flex justify-between">
+              <div className="flex gap-2">
+                {step > 1 && (
+                  <Button variant="outline" onClick={() => setStep(step - 1)}>
+                    Back
+                  </Button>
+                )}
+              </div>
+              {step < 2 ? (
+                <Button onClick={() => setStep(step + 1)}>Next</Button>
+              ) : (
+                <Button onClick={handleCreateAdmin}>Create Admin</Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
