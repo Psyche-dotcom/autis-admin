@@ -528,10 +528,10 @@ export function SymbolList({
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Excel must contain at least a column for the symbol name (e.g.
-                  "name") and a column for file path (e.g. "filePath"). Column
-                  names are case-insensitive. The file path column is only used
-                  to match filenames; you will still need to select the actual
-                  files in step 2.
+                  &quot;name&quot;) and a column for file path (e.g.
+                  &quot;filePath&quot;). Column names are case-insensitive. The
+                  file path column is only used to match filenames; you will
+                  still need to select the actual files in step 2.
                 </p>
               </div>
 
@@ -624,7 +624,9 @@ export function SymbolList({
                               Excel path: {pathVal || "(no path specified)"}
                             </div>
                             <div className="text-xs">
-                              Looking for: "{basename || "(no filename)"}"
+                              Looking for: &quot;
+                              {basename || "(no filename)"}
+                              &quot;
                             </div>
                           </div>
 
