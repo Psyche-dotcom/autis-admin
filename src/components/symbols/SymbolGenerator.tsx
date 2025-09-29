@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import HttpService from "@/service/httpService";
+import { routes } from "@/service/api-routes";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -29,50 +31,6 @@ export function SymbolGenerator({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedSVG, setGeneratedSVG] = useState("");
 
-  // This would normally call an AI service
-  // For demo purposes, we'll simulate generation with predefined SVGs
-  const mockGenerateSVG = async (
-    promptText: string,
-    category: string
-  ): Promise<string> => {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Simple keyword matching for demo purposes
-    const promptLower = promptText.toLowerCase();
-    const categoryObj = categories.find((c) => c.id === category);
-    const categoryName = categoryObj?.name.toLowerCase() || "";
-
-    if (
-      promptLower.includes("arrow") ||
-      promptLower.includes("direction") ||
-      categoryName.includes("arrow")
-    ) {
-      return `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>`;
-    } else if (
-      promptLower.includes("moon") ||
-      promptLower.includes("night") ||
-      categoryName.includes("weather")
-    ) {
-      return `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
-    } else if (
-      promptLower.includes("sun") ||
-      promptLower.includes("day") ||
-      categoryName.includes("weather")
-    ) {
-      return `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
-    } else if (
-      promptLower.includes("menu") ||
-      promptLower.includes("hamburger") ||
-      categoryName.includes("ui")
-    ) {
-      return `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`;
-    } else {
-      // Default shape
-      return `<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>`;
-    }
-  };
-
   const handleGenerate = async () => {
     if (!prompt) {
       toast({
@@ -95,23 +53,18 @@ export function SymbolGenerator({
     setIsGenerating(true);
 
     try {
-      // In a real app, this would call an AI service API with both prompt and category
-      const svg = await mockGenerateSVG(prompt, categoryId);
-      setGeneratedSVG(svg);
+      const res = await HttpService.getData(
+        routes.generateAiSymbol(prompt, categoryId)
+      );
 
       // Auto-generate a name if not provided
-      if (!symbolName) {
-        const words = prompt.split(" ");
-        const capitalizedWords = words.map(
-          (word) => word.charAt(0).toUpperCase() + word.slice(1)
-        );
-        setSymbolName(capitalizedWords.join(" "));
+      if (res != null) {
       }
 
       toast({
         title: "Symbol Generated",
         description:
-          "Your symbol has been created. Click Save to add it to your library.",
+          "Your symbol has been generated. when it is ready it will be saved to the category.",
       });
     } catch (error) {
       toast({
