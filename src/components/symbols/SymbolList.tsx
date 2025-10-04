@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload, Loader2 } from "lucide-react";
 
 import { Category, ISymbol } from "@/interface";
 
@@ -84,6 +84,17 @@ export function SymbolList({
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const [bulkErrors, setBulkErrors] = useState<string[]>([]);
+  // New: single category value for bulk (matches Add dialog behaviour - uses category.name)
+  const [bulkCategory, setBulkCategory] = useState<string>(
+    categories[0]?.name || ""
+  );
+  // Keep per-row preview so previews remain while uploading one by one
+  const [bulkPreview, setBulkPreview] = useState<Record<number, string>>({});
+
+  useEffect(() => {
+    // keep bulkCategory in sync if categories prop changes
+    if (!bulkCategory && categories[0]) setBulkCategory(categories[0].name);
+  }, [categories]);
 
   const handleEdit = (symbol: ISymbol) => {
     setCurrentSymbol(symbol);
@@ -206,7 +217,7 @@ export function SymbolList({
   const normalize = (s: string) => {
     return String(s || "")
       .trim()
-      .replace(/^"|"$/g, "") // remove surrounding quotes
+      .replace(/^\"|\"$/g, "") // remove surrounding quotes
       .replace(/%20/g, " ")
       .toLowerCase();
   };
@@ -399,6 +410,15 @@ export function SymbolList({
     });
   }
 
+  function filenameToSymbolName(filename: string) {
+    // remove extension
+    const name = filename.replace(/\.[^/.]+$/, "");
+    // replace underscores/dashes with spaces, trim
+    const pretty = name.replace(/[_-]+/g, " ").trim();
+    // capitalize first letter
+    return pretty.charAt(0).toUpperCase() + pretty.slice(1);
+  }
+
   const startBulkUpload = async () => {
     setBulkErrors([]);
     if (!excelRows.length) {
@@ -453,20 +473,23 @@ export function SymbolList({
 
       try {
         const svgString = await readFileToSvgString(file);
+
+        // keep preview for this row so it remains visible while other files upload
+        setBulkPreview((prev) => ({ ...prev, [i]: svgString }));
+
+        const intendedName =
+          row.name ||
+          row.Name ||
+          filenameToSymbolName(file.name) ||
+          `Symbol-${i + 1}`;
+
+        // IMPORTANT: keep the same category value format you're using in Add dialog.
+        // The Add dialog uses category.name as the SelectItem value, so we preserve that here.
         const symbol: ISymbol = {
           id: Math.random().toString(36).substring(7),
-          name: row.name || row.Name || row.title || `Symbol-${i + 1}`,
+          name: intendedName,
           svg: svgString,
-          categoryId:
-            (row.category &&
-              categories.find(
-                (c) =>
-                  c.name.toLowerCase() === String(row.category).toLowerCase()
-              )?.id) ||
-            (row.categoryId &&
-              categories.find((c) => c.id === String(row.categoryId))?.id) ||
-            categories[0]?.id ||
-            "",
+          categoryId: bulkCategory || categories[0]?.name || "",
           dateCreated: new Date().toISOString().split("T")[0],
           file,
         };
@@ -474,10 +497,10 @@ export function SymbolList({
         console.log(
           `[BulkUpload] Uploading row ${i + 1} -> file: ${
             file.name
-          }, symbol name: ${symbol.name}`
+          }, symbol name: ${symbol.name}, category: ${symbol.categoryId}`
         );
 
-        // Use existing onAdd handler so caller can use API
+        // Use existing onAdd handler so caller can use API - called for each valid file
         onAdd(symbol);
       } catch (e: any) {
         errors.push(
@@ -512,9 +535,9 @@ export function SymbolList({
               <DialogTitle>Bulk Upload Symbols via Excel</DialogTitle>
               <DialogDescription>
                 Upload an Excel file containing symbol rows (name and file
-                path). Then select the actual symbol files (.svg/.png) so the
-                browser can read them. Browsers cannot access arbitrary file
-                paths, so you must also select the files.
+                path). Then select the actual symbol files — you can pick a
+                folder (recommended) or individual files. Browsers cannot access
+                arbitrary file paths, so you must also select the files/folder.
               </DialogDescription>
             </DialogHeader>
 
@@ -531,21 +554,44 @@ export function SymbolList({
                   &quot;name&quot;) and a column for file path (e.g.
                   &quot;filePath&quot;). Column names are case-insensitive. The
                   file path column is only used to match filenames; you will
-                  still need to select the actual files in step 2.
+                  still need to select the actual files in step 2 (folder
+                  selection recommended).
                 </p>
               </div>
 
               <div>
                 <Label>
-                  Step 2 — Select all symbol files referenced in the Excel
+                  Step 2 — Select folder (or select individual symbol files)
                 </Label>
-                <Input
-                  type="file"
-                  accept=".svg,.png"
-                  multiple
-                  onChange={(e) => onPickAllFiles(e.target.files)}
-                />
-                <div className="flex gap-2 mt-2">
+
+                <div className="flex items-center gap-2">
+                  {/* Native folder input (webkitdirectory) for folder selection.
+                      Note: we use a native hidden input to ensure the webkitdirectory attribute is forwarded. */}
+                  <label className="cursor-pointer px-3 py-2 border rounded text-sm bg-blue-50 hover:bg-blue-100">
+                    Select Folder
+                    <input
+                      type="file"
+                      // @ts-ignore - non-standard attributes forwarded for folder selection
+                      webkitdirectory="true"
+                      directory=""
+                      multiple
+                      accept=".svg,.png"
+                      className="hidden"
+                      onChange={(e) => onPickAllFiles(e.target.files)}
+                    />
+                  </label>
+
+                  <label className="cursor-pointer px-3 py-2 border rounded text-sm bg-blue-50 hover:bg-blue-100">
+                    Or choose files
+                    <input
+                      type="file"
+                      multiple
+                      accept=".svg,.png"
+                      className="hidden"
+                      onChange={(e) => onPickAllFiles(e.target.files)}
+                    />
+                  </label>
+
                   <Button
                     onClick={() => {
                       console.log("[BulkUpload] Auto-match clicked");
@@ -555,37 +601,51 @@ export function SymbolList({
                   >
                     Auto-match
                   </Button>
+
                   <Button
                     variant="outline"
                     onClick={() => {
                       setAllPickedFiles([]);
                       setMappedFiles({});
-                      const fileInput = document.querySelector(
-                        'input[type=file][accept=".svg,.png"][multiple]'
-                      ) as HTMLInputElement | null;
-                      if (fileInput) fileInput.value = "";
                     }}
                   >
                     Reset files
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      console.log("[BulkUpload] Debug dump", {
-                        excelRows,
-                        allPickedFiles: allPickedFiles.map((f) => f.name),
-                        mappedFiles,
-                      })
-                    }
-                  >
-                    Console dump
-                  </Button>
                 </div>
+
                 <p className="text-xs text-muted-foreground mt-1">
-                  Select all .svg/.png files referenced by the Excel. Matching
-                  is done by filename (basename). If auto-matching fails you can
-                  manually pick a file for each row below.
+                  Selecting a folder uploads all files inside it (and subfolders
+                  in supporting browsers). Matching is done by filename
+                  (basename).
                 </p>
+              </div>
+
+              <div>
+                <Label>Step 2a — Category to apply to all selected files</Label>
+                <div>
+                  <Select
+                    value={bulkCategory}
+                    onValueChange={(value) => setBulkCategory(value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pick a category for all files" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        // NOTE: matching Add dialog: value is category.name
+                        <SelectItem key={category.id} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    No category is expected in Excel — the category selected
+                    here will be assigned to every symbol created from the
+                    selected files. (We preserve the same category value format
+                    you use in the Add dialog.)
+                  </p>
+                </div>
               </div>
 
               <div>
@@ -631,6 +691,26 @@ export function SymbolList({
                           </div>
 
                           <div className="flex items-center gap-2">
+                            {/* Preview box - remains when file uploads */}
+                            <div className="w-14 h-12 flex-shrink-0 border rounded overflow-hidden flex items-center justify-center">
+                              {bulkPreview[idx] ? (
+                                <div
+                                  className="w-full h-full overflow-hidden flex items-center justify-center"
+                                  dangerouslySetInnerHTML={{
+                                    __html: bulkPreview[idx],
+                                  }}
+                                />
+                              ) : mapped ? (
+                                <div className="text-xs px-1 text-center truncate">
+                                  {mapped.name}
+                                </div>
+                              ) : (
+                                <div className="text-xs px-1 text-center text-muted-foreground">
+                                  No preview
+                                </div>
+                              )}
+                            </div>
+
                             <div className="text-sm">
                               {mapped ? (
                                 <div className="flex items-center gap-2 text-green-600">
@@ -705,9 +785,14 @@ export function SymbolList({
                     onClick={startBulkUpload}
                     disabled={bulkUploading || excelRows.length === 0}
                   >
-                    {bulkUploading
-                      ? `Uploading (${bulkProgress.done}/${bulkProgress.total})`
-                      : "Start Bulk Upload"}
+                    {bulkUploading ? (
+                      <>
+                        <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                        {`Uploading (${bulkProgress.done}/${bulkProgress.total})`}
+                      </>
+                    ) : (
+                      "Start Bulk Upload"
+                    )}
                   </Button>
                 </div>
                 <div className="text-right text-xs text-muted-foreground">
@@ -735,6 +820,8 @@ export function SymbolList({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* --- existing Add / Edit dialogs and main UI below (unchanged) --- */}
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
