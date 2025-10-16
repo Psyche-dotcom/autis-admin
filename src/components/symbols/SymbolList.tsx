@@ -520,6 +520,21 @@ export function SymbolList({
   };
 
   // -------------------- UI --------------------
+  // --- Bulk Upload Multi-Step State ---
+  const [bulkStep, setBulkStep] = useState(1);
+
+  // Step validation
+  const canStep2 = excelFile && excelRows.length > 0;
+  const canStep3 = allPickedFiles.length > 0;
+  const canStep4 = bulkCategory;
+  const canStep5 =
+    excelRows.length > 0 && Object.values(mappedFiles).some(Boolean);
+
+  // Step navigation
+  const nextStep = () => setBulkStep((s) => Math.min(s + 1, 5));
+  const prevStep = () => setBulkStep((s) => Math.max(s - 1, 1));
+  const gotoStep = (n: number) => setBulkStep(n);
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end gap-2">
@@ -534,44 +549,75 @@ export function SymbolList({
             <DialogHeader>
               <DialogTitle>Bulk Upload Symbols via Excel</DialogTitle>
               <DialogDescription>
-                Upload an Excel file containing symbol rows (name and file
-                path). Then select the actual symbol files — you can pick a
-                folder (recommended) or individual files. Browsers cannot access
-                arbitrary file paths, so you must also select the files/folder.
+                Upload symbols in 5 steps. Progress is saved as you go.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid gap-4 py-4">
-              <div>
+            {/* Stepper UI */}
+            <div className="flex items-center gap-2 mb-4">
+              {[1, 2, 3, 4, 5].map((step) => (
+                <button
+                  key={step}
+                  type="button"
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                    bulkStep === step
+                      ? "bg-blue-600 text-white"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                  disabled={
+                    step > bulkStep ||
+                    (step === 2 && !canStep2) ||
+                    (step === 3 && !canStep3) ||
+                    (step === 4 && !canStep4) ||
+                    (step === 5 && !canStep5)
+                  }
+                  onClick={() => gotoStep(step)}
+                >
+                  {`Step ${step}`}
+                </button>
+              ))}
+            </div>
+
+            {/* Step 1: Excel file upload */}
+            {bulkStep === 1 && (
+              <div className="space-y-2">
                 <Label>Step 1 — Pick Excel file (xlsx)</Label>
                 <Input
                   type="file"
                   accept=".xlsx,.xls"
-                  onChange={(e) => onExcelPicked(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    onExcelPicked(e.target.files?.[0] || null);
+                    setBulkStep(2);
+                  }}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Excel must contain at least a column for the symbol name (e.g.
-                  &quot;name&quot;) and a column for file path (e.g.
-                  &quot;filePath&quot;). Column names are case-insensitive. The
-                  file path column is only used to match filenames; you will
-                  still need to select the actual files in step 2 (folder
-                  selection recommended).
+                  "name") and a column for file path (e.g. "filePath"). Column
+                  names are case-insensitive. The file path column is only used
+                  to match filenames; you will still need to select the actual
+                  files in step 2 (folder selection recommended).
                 </p>
+                <div className="flex gap-2 mt-2">
+                  <Button disabled>Previous</Button>
+                  <Button disabled={!canStep2} onClick={nextStep}>
+                    Next
+                  </Button>
+                </div>
               </div>
+            )}
 
-              <div>
+            {/* Step 2: Select files/folder */}
+            {bulkStep === 2 && (
+              <div className="space-y-2">
                 <Label>
                   Step 2 — Select folder (or select individual symbol files)
                 </Label>
-
                 <div className="flex items-center gap-2">
-                  {/* Native folder input (webkitdirectory) for folder selection.
-                      Note: we use a native hidden input to ensure the webkitdirectory attribute is forwarded. */}
                   <label className="cursor-pointer px-3 py-2 border rounded text-sm bg-blue-50 hover:bg-blue-100">
                     Select Folder
                     <input
                       type="file"
-                      // @ts-ignore - non-standard attributes forwarded for folder selection
+                      // @ts-ignore
                       webkitdirectory="true"
                       directory=""
                       multiple
@@ -580,7 +626,6 @@ export function SymbolList({
                       onChange={(e) => onPickAllFiles(e.target.files)}
                     />
                   </label>
-
                   <label className="cursor-pointer px-3 py-2 border rounded text-sm bg-blue-50 hover:bg-blue-100">
                     Or choose files
                     <input
@@ -591,17 +636,14 @@ export function SymbolList({
                       onChange={(e) => onPickAllFiles(e.target.files)}
                     />
                   </label>
-
                   <Button
                     onClick={() => {
-                      console.log("[BulkUpload] Auto-match clicked");
                       setMappedFiles(tryAutoMap(allPickedFiles, excelRows));
                     }}
                     disabled={!allPickedFiles.length || !excelRows.length}
                   >
                     Auto-match
                   </Button>
-
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -612,44 +654,60 @@ export function SymbolList({
                     Reset files
                   </Button>
                 </div>
-
                 <p className="text-xs text-muted-foreground mt-1">
                   Selecting a folder uploads all files inside it (and subfolders
                   in supporting browsers). Matching is done by filename
                   (basename).
                 </p>
-              </div>
-
-              <div>
-                <Label>Step 2a — Category to apply to all selected files</Label>
-                <div>
-                  <Select
-                    value={bulkCategory}
-                    onValueChange={(value) => setBulkCategory(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pick a category for all files" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        // NOTE: matching Add dialog: value is category.name
-                        <SelectItem key={category.id} value={category.name}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    No category is expected in Excel — the category selected
-                    here will be assigned to every symbol created from the
-                    selected files. (We preserve the same category value format
-                    you use in the Add dialog.)
-                  </p>
+                <div className="flex gap-2 mt-2">
+                  <Button onClick={prevStep}>Previous</Button>
+                  <Button disabled={!canStep3} onClick={nextStep}>
+                    Next
+                  </Button>
                 </div>
               </div>
+            )}
 
-              <div>
-                <Label>Preview mapping (manual override available)</Label>
+            {/* Step 3: Category selection */}
+            {bulkStep === 3 && (
+              <div className="space-y-2">
+                <Label>Step 3 — Category to apply to all selected files</Label>
+                <Select
+                  value={bulkCategory}
+                  onValueChange={(value) => setBulkCategory(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pick a category for all files" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.name}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  No category is expected in Excel — the category selected here
+                  will be assigned to every symbol created from the selected
+                  files. (We preserve the same category value format you use in
+                  the Add dialog.)
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <Button onClick={prevStep}>Previous</Button>
+                  <Button disabled={!canStep4} onClick={nextStep}>
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Preview mapping/manual override */}
+            {bulkStep === 4 && (
+              <div className="space-y-2">
+                <Label>
+                  Step 4 — Preview mapping (manual override available)
+                </Label>
                 <div className="max-h-64 overflow-auto border rounded p-2">
                   {excelRows.length === 0 ? (
                     <div className="text-sm text-muted-foreground">
@@ -670,7 +728,6 @@ export function SymbolList({
                       );
                       const basename = extractBaseName(pathVal);
                       const mapped = mappedFiles[idx];
-
                       return (
                         <div
                           key={idx}
@@ -684,14 +741,10 @@ export function SymbolList({
                               Excel path: {pathVal || "(no path specified)"}
                             </div>
                             <div className="text-xs">
-                              Looking for: &quot;
-                              {basename || "(no filename)"}
-                              &quot;
+                              Looking for: "{basename || "(no filename)"}"
                             </div>
                           </div>
-
                           <div className="flex items-center gap-2">
-                            {/* Preview box - remains when file uploads */}
                             <div className="w-14 h-12 flex-shrink-0 border rounded overflow-hidden flex items-center justify-center">
                               {bulkPreview[idx] ? (
                                 <div
@@ -710,7 +763,6 @@ export function SymbolList({
                                 </div>
                               )}
                             </div>
-
                             <div className="text-sm">
                               {mapped ? (
                                 <div className="flex items-center gap-2 text-green-600">
@@ -724,8 +776,6 @@ export function SymbolList({
                                 </span>
                               )}
                             </div>
-
-                            {/* Manual file selection */}
                             <label className="cursor-pointer px-2 py-1 border rounded text-xs bg-blue-50 hover:bg-blue-100">
                               Choose File
                               <input
@@ -740,8 +790,6 @@ export function SymbolList({
                                 }
                               />
                             </label>
-
-                            {/* Dropdown to pick from uploaded files */}
                             {allPickedFiles.length > 0 && (
                               <select
                                 className="text-xs p-1 border rounded"
@@ -777,47 +825,61 @@ export function SymbolList({
                     })
                   )}
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 items-center">
-                <div>
-                  <Button
-                    onClick={startBulkUpload}
-                    disabled={bulkUploading || excelRows.length === 0}
-                  >
-                    {bulkUploading ? (
-                      <>
-                        <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                        {`Uploading (${bulkProgress.done}/${bulkProgress.total})`}
-                      </>
-                    ) : (
-                      "Start Bulk Upload"
-                    )}
+                <div className="flex gap-2 mt-2">
+                  <Button onClick={prevStep}>Previous</Button>
+                  <Button disabled={!canStep5} onClick={nextStep}>
+                    Next
                   </Button>
                 </div>
-                <div className="text-right text-xs text-muted-foreground">
-                  {bulkErrors.length > 0 && (
-                    <div>
-                      <div className="font-medium text-destructive">Errors</div>
-                      <ul className="list-disc ml-4 text-xs">
-                        {bulkErrors.map((e, i) => (
-                          <li key={i}>{e}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+              </div>
+            )}
+
+            {/* Step 5: Upload */}
+            {bulkStep === 5 && (
+              <div className="space-y-2">
+                <Label>Step 5 — Start Bulk Upload</Label>
+                <div className="grid grid-cols-2 gap-2 items-center">
+                  <div>
+                    <Button
+                      onClick={startBulkUpload}
+                      disabled={bulkUploading || excelRows.length === 0}
+                    >
+                      {bulkUploading ? (
+                        <>
+                          <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                          {`Uploading (${bulkProgress.done}/${bulkProgress.total})`}
+                        </>
+                      ) : (
+                        "Start Bulk Upload"
+                      )}
+                    </Button>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground">
+                    {bulkErrors.length > 0 && (
+                      <div>
+                        <div className="font-medium text-destructive">
+                          Errors
+                        </div>
+                        <ul className="list-disc ml-4 text-xs">
+                          {bulkErrors.map((e, i) => (
+                            <li key={i}>{e}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <Button onClick={prevStep}>Previous</Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsBulkDialogOpen(false)}
+                  >
+                    Close
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsBulkDialogOpen(false)}
-              >
-                Close
-              </Button>
-            </DialogFooter>
+            )}
           </DialogContent>
         </Dialog>
 
