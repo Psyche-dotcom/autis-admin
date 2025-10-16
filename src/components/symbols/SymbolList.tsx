@@ -299,7 +299,9 @@ export function SymbolList({
       // Get the last segment as the filename
       const basename = pathVal.split("/").pop()?.trim() || "";
 
-      console.log(`[BulkUpload] Row ${idx + 1} looking for: "${basename}"`);
+      console.log(
+        `[BulkUpload] Row ${idx + 1} looking for: &quot;${basename}&quot;`
+      );
 
       let found: File | null = null;
 
@@ -592,11 +594,13 @@ export function SymbolList({
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Excel must contain at least a column for the symbol name (e.g.
-                  "name") and a column for file path (e.g. "filePath"). Column
-                  names are case-insensitive. The file path column is only used
-                  to match filenames; you will still need to select the actual
-                  files in step 2 (folder selection recommended).
+                  &quot;name&quot;) and a column for file path (e.g.
+                  &quot;filePath&quot;). Column names are case-insensitive. The
+                  file path column is only used to match filenames; you will
+                  still need to select the actual files in step 2 (folder
+                  selection recommended).
                 </p>
+
                 <div className="flex gap-2 mt-2">
                   <Button disabled>Previous</Button>
                   <Button disabled={!canStep2} onClick={nextStep}>
@@ -714,115 +718,118 @@ export function SymbolList({
                       No rows found yet
                     </div>
                   ) : (
-                    excelRows.map((row, idx) => {
-                      const pathVal = String(
-                        row.filePath ||
-                          row.file ||
-                          row.FilePath ||
-                          row.File ||
-                          row.path ||
-                          row.Path ||
-                          row.filename ||
-                          row.fileName ||
-                          ""
-                      );
-                      const basename = extractBaseName(pathVal);
-                      const mapped = mappedFiles[idx];
-                      return (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between gap-4 p-2 even:bg-muted/30"
-                        >
-                          <div className="flex-1">
-                            <div className="font-medium">
-                              {row.name || row.Name || `Row ${idx + 1}`}
+                    <>
+                      {excelRows.map((row, idx) => {
+                        const pathVal = String(
+                          row.filePath ||
+                            row.file ||
+                            row.FilePath ||
+                            row.File ||
+                            row.path ||
+                            row.Path ||
+                            row.filename ||
+                            row.fileName ||
+                            ""
+                        );
+                        const basename = extractBaseName(pathVal);
+                        const mapped = mappedFiles[idx];
+                        return (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between gap-4 p-2 even:bg-muted/30"
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium">
+                                {row.name || row.Name || `Row ${idx + 1}`}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Excel path: {pathVal || "(no path specified)"}
+                              </div>
+                              <div className="text-xs">
+                                Looking for: &quot;{basename || "(no filename)"}
+                                &quot;
+                              </div>
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              Excel path: {pathVal || "(no path specified)"}
-                            </div>
-                            <div className="text-xs">
-                              Looking for: "{basename || "(no filename)"}"
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-14 h-12 flex-shrink-0 border rounded overflow-hidden flex items-center justify-center">
-                              {bulkPreview[idx] ? (
-                                <div
-                                  className="w-full h-full overflow-hidden flex items-center justify-center"
-                                  dangerouslySetInnerHTML={{
-                                    __html: bulkPreview[idx],
-                                  }}
-                                />
-                              ) : mapped ? (
-                                <div className="text-xs px-1 text-center truncate">
-                                  {mapped.name}
-                                </div>
-                              ) : (
-                                <div className="text-xs px-1 text-center text-muted-foreground">
-                                  No preview
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-sm">
-                              {mapped ? (
-                                <div className="flex items-center gap-2 text-green-600">
-                                  <span className="truncate max-w-[200px]">
+                            <div className="flex items-center gap-2">
+                              <div className="w-14 h-12 flex-shrink-0 border rounded overflow-hidden flex items-center justify-center">
+                                {bulkPreview[idx] ? (
+                                  <div
+                                    className="w-full h-full overflow-hidden flex items-center justify-center"
+                                    dangerouslySetInnerHTML={{
+                                      __html: bulkPreview[idx],
+                                    }}
+                                  />
+                                ) : mapped ? (
+                                  <div className="text-xs px-1 text-center truncate">
                                     {mapped.name}
+                                  </div>
+                                ) : (
+                                  <div className="text-xs px-1 text-center text-muted-foreground">
+                                    No preview
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-sm">
+                                {mapped ? (
+                                  <div className="flex items-center gap-2 text-green-600">
+                                    <span className="truncate max-w-[200px]">
+                                      {mapped.name}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-destructive">
+                                    File not selected
                                   </span>
-                                </div>
-                              ) : (
-                                <span className="text-destructive">
-                                  File not selected
-                                </span>
+                                )}
+                              </div>
+                              <label className="cursor-pointer px-2 py-1 border rounded text-xs bg-blue-50 hover:bg-blue-100">
+                                Choose File
+                                <input
+                                  type="file"
+                                  accept=".svg,.png"
+                                  className="hidden"
+                                  onChange={(e) =>
+                                    handleManualMap(
+                                      idx,
+                                      e.target.files?.[0] || null
+                                    )
+                                  }
+                                />
+                              </label>
+                              {allPickedFiles.length > 0 && (
+                                <select
+                                  className="text-xs p-1 border rounded"
+                                  value={
+                                    mapped
+                                      ? allPickedFiles
+                                          .findIndex(
+                                            (f) => f.name === mapped.name
+                                          )
+                                          ?.toString() || "-1"
+                                      : "-1"
+                                  }
+                                  onChange={(e) => {
+                                    const v = Number(e.target.value);
+                                    const f =
+                                      Number.isFinite(v) && v >= 0
+                                        ? allPickedFiles[v]
+                                        : null;
+                                    handleManualMap(idx, f);
+                                  }}
+                                >
+                                  <option value={"-1"}>— pick file —</option>
+                                  {allPickedFiles.map((f, i) => (
+                                    <option key={i} value={i}>
+                                      {f.name}
+                                    </option>
+                                  ))}
+                                </select>
                               )}
                             </div>
-                            <label className="cursor-pointer px-2 py-1 border rounded text-xs bg-blue-50 hover:bg-blue-100">
-                              Choose File
-                              <input
-                                type="file"
-                                accept=".svg,.png"
-                                className="hidden"
-                                onChange={(e) =>
-                                  handleManualMap(
-                                    idx,
-                                    e.target.files?.[0] || null
-                                  )
-                                }
-                              />
-                            </label>
-                            {allPickedFiles.length > 0 && (
-                              <select
-                                className="text-xs p-1 border rounded"
-                                value={
-                                  mapped
-                                    ? allPickedFiles
-                                        .findIndex(
-                                          (f) => f.name === mapped.name
-                                        )
-                                        ?.toString() || "-1"
-                                    : "-1"
-                                }
-                                onChange={(e) => {
-                                  const v = Number(e.target.value);
-                                  const f =
-                                    Number.isFinite(v) && v >= 0
-                                      ? allPickedFiles[v]
-                                      : null;
-                                  handleManualMap(idx, f);
-                                }}
-                              >
-                                <option value={"-1"}>— pick file —</option>
-                                {allPickedFiles.map((f, i) => (
-                                  <option key={i} value={i}>
-                                    {f.name}
-                                  </option>
-                                ))}
-                              </select>
-                            )}
                           </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })}
+                    </>
                   )}
                 </div>
                 <div className="flex gap-2 mt-2">
